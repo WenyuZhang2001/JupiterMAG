@@ -10,19 +10,8 @@ import Spherical_Harmonic_InversionModel_Functions
 
 
 
-'''
-year_doy_pj = {'2016':[[240,1],[346,3]],
-              '2017':[[33,4],[86,5],[139,6],[191,7],[244,8],[297,9],[350,10]],
-              '2018':[[38,11],[91,12],[144,13],[197,14],[249,15],[302,16],[355,17]],
-              '2019':[[43,18],[96,19],[149,20],[201,21],[254,22],[307,23],[360,24]],
-               '2020':[[48,25],[101,26],[154,27],[207,28],[259,29],[312,30],[365,31]],
-               '2021':[[52,32],[105,33],[159,34],[202,35],[245,36],[289,37],[333,38]],
-               '2022':[[12,39],[55,40],[99,41],[142,42],[186,43],[229,44],[272,45],[310,46],[348,47]],
-               '2023':[[22,48],[60,49],[98,50]]}
-'''
 
 
-# year_doy_pj = {'2018':[[144,13]]}
 year_doy_pj = {'2021':[[52,32]]}
 
 # Model Compared to
@@ -73,7 +62,7 @@ B_In_obs = Spherical_Harmonic_InversionModel_Functions.B_In_obs_Calculate(data,B
 
 
 
-def PLot_Bfield_Model(data,Nmax=10,path = 'Spherical_Harmonic_Model/2h_1sData',Model_Ridge_On = True,Ridge_alpha=0,Model_JRM_on = True,Model_SVD_On = True,Model_LSTSQ_On = True):
+def PLot_Bfield_Model(data,Nmax=10,path = 'Spherical_Harmonic_Model/',Model_Ridge_On = True,Ridge_alpha=0,Model_JRM_on = True,Model_SVD_On = True,Model_LSTSQ_On = True):
 
     if Model_Ridge_On:
         B_Model_Ridge = Spherical_Harmonic_InversionModel_Functions.calculate_Bfield(data,Nmax=Nmax,path=path,method='Ridge',Ridge_alpha=Ridge_alpha)
@@ -204,18 +193,14 @@ def PLot_Bfield_Model(data,Nmax=10,path = 'Spherical_Harmonic_Model/2h_1sData',M
 
 
 
-'''
-Nmax_list = range(1,21)
-for Nmax in Nmax_list:
-    PLot_Bfield_Model(data,Nmax=Nmax,path='Spherical_Harmonic_Model/2h_1sData',Ridge_alpha=0)
-'''
+
 
 # Nmax_list = [1,5,10,15,20]
 Nmax_list = [10]
 # path = 'Spherical_Harmonic_Model/Ridged_Model'
-path = 'Spherical_Harmonic_Model/2h_1sData'
+path = 'Spherical_Harmonic_Model/First50_Orbit_Model'
 for Nmax in Nmax_list:
     # PLot_Bfield_Model(data,Nmax=Nmax,path=path,Ridge_alpha=1,
     #                   Model_SVD_On=False,Model_LSTSQ_On=False,Model_Ridge_On=False)
     PLot_Bfield_Model(data, Nmax=Nmax, path=path,
-                      Model_SVD_On=True, Model_LSTSQ_On=True, Model_Ridge_On=False)
+                      Model_SVD_On=True, Model_LSTSQ_On=False, Model_Ridge_On=False)

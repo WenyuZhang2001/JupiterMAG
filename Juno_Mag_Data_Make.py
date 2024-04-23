@@ -37,6 +37,16 @@ day_1 = timedelta(days=1)
 hour_1 = timedelta(hours=1)
 min_1 = timedelta(minutes=1)
 
+# Date
+
+year_doy_pj = {'2016':[[240,1],[346,3]],
+              '2017':[[33,4],[86,5],[139,6],[191,7],[244,8],[297,9],[350,10]],
+              '2018':[[38,11],[91,12],[144,13],[197,14],[249,15],[302,16],[355,17]],
+              '2019':[[43,18],[96,19],[149,20],[201,21],[254,22],[307,23],[360,24]],
+               '2020':[[48,25],[101,26],[154,27],[207,28],[259,29],[312,30],[365,31]],
+               '2021':[[52,32],[105,33],[159,34],[202,35],[245,36],[289,37],[333,38]],
+               '2022':[[12,39],[55,40],[99,41],[142,42],[186,43],[229,44],[272,45],[310,46],[348,47]],
+               '2023':[[22,48],[60,49],[98,50]]}
 
 # Functions
 
@@ -221,14 +231,14 @@ def Read_Data_60s(year_doy,directory_path = 'JunoFGMData/'):
     
     return data
 
-def MagneticField_Internal(data,model='jrm33'):
+def MagneticField_Internal(data,model='jrm33',degree=10):
     
     # Internal
     BxIn,ByIn,BzIn = JupiterMagInternal(data['X'].to_numpy(),
                                       data['Y'].to_numpy(),
                                       data['Z'].to_numpy(),
-                                        model = 'jrm33',
-                                      cartesianIn=True,cartesianOut=True)
+                                        model = model,
+                                      cartesianIn=True,cartesianOut=True,degree=degree)
     B_In_np = np.vstack((BxIn,ByIn,BzIn)).T
     B_In = pd.DataFrame(B_In_np,columns=['Bx','By','Bz'],index=data['X'].index)
     B_In['Btotal'] = (B_In['Bx']**2 + B_In['By']**2 + B_In['Bz']**2)**0.5
@@ -386,3 +396,56 @@ def Max_Delta_Bfield_Btotal(data,B_In,B_Ex, pj=99,Coordinate='Sys3'):
             Juno_MAG_Max_Btotal_delta = data.loc[data['delta_Btotal'].idxmax()].to_frame().T
             Juno_MAG_Max_Btotal_delta.to_csv(f'Result_data/Juno_MAG_MaxBtotalDelta_{Coordinate}.csv')
 
+def read_24hData(year_doy_pj,freq=60):
+    data = pd.DataFrame()
+
+    for year in year_doy_pj.keys():
+        for doy in year_doy_pj[year]:
+
+            year_doy = {year:[doy[0]]}
+            date_list = dateList(year_doy)
+
+            # read data
+            if freq == 60:
+                Data = Read_Data_60s(year_doy)
+            elif freq == 1:
+                Data = Read_Data_1s(year_doy)
+
+            # 24 hours data
+            Time_start = date_list['Time'].iloc[0]
+            Time_end = Time_start+hour_1*24
+
+            data_day = Data.loc[Time_start:Time_end]
+
+            if data.empty:
+                data = data_day
+            else:
+                data = pd.concat([data, data_day])
+    return data
+
+def Caluclate_B_Residual(data,B_In,B_Ex):
+    '''
+
+    :param data: MAG data
+    :param B_In: B internal
+    :param B_Ex: B External
+    :return: B Residual Field
+    '''
+
+    B_residual = pd.DataFrame(index = data.index)
+    component = 'Br'
+    B_residual[component] = data[component]-B_In[component]-B_Ex[component]
+    component = 'Btheta'
+    B_residual[component] = data[component] - B_In[component] - B_Ex[component]
+    component = 'Bphi'
+    B_residual[component] = data[component] - B_In[component] - B_Ex[component]
+    component = 'Bx'
+    B_residual[component] = data[component] - B_In[component] - B_Ex[component]
+    component = 'By'
+    B_residual[component] = data[component] - B_In[component] - B_Ex[component]
+    component = 'Bz'
+    B_residual[component] = data[component] - B_In[component] - B_Ex[component]
+    component = 'Btotal'
+    B_residual[component] = data[component] - B_In[component] - B_Ex[component]
+
+    return  B_residual

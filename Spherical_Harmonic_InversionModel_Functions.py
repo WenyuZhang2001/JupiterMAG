@@ -28,7 +28,7 @@ def Model_Simulation(data, B_In_obs, NMAX=10, NMIN=1, SVD_On=True,LSTSQ_On = Tru
 
     for Nmax in range(NMIN, NMAX+1):
         # Total number of gnm and hnm coefficients
-        num_coeffs = (Nmax + 3) * Nmax / 2
+        num_coeffs = (Nmax + 2) * Nmax
 
         # Initialize your observations vector B
         B = np.vstack((B_In_obs['Br'], B_In_obs['Btheta'], B_In_obs['Bphi'])).T.reshape(-1)
@@ -89,9 +89,9 @@ def read_gnm_hnm_data(method='SVD', Nmax=13, path='Spherical_Harmonic_Model'):
 
 def Schmidt_Matrix(data,Nmax):
     # Initialize the design matrix A
-    num_coeffs = int((Nmax + 3) * Nmax / 2)
-    print(f'Schmidt Coefficient gnm or hnm numbers = {num_coeffs}')
-    A = np.zeros((len(data)*3, 2 * num_coeffs))
+    num_coeffs = int((Nmax + 2) * Nmax)
+    print(f'Schmidt Coefficient total numbers = {num_coeffs}\n gnm_num={(Nmax+3)*Nmax/2} hnm_num={(Nmax+3)*Nmax/2-Nmax}')
+    A = np.zeros((len(data)*3, num_coeffs))
 
     # Function to calculate the Schmidt semi-normalization factor
     def schmidt_semi_normalization(n, m):
@@ -103,19 +103,29 @@ def Schmidt_Matrix(data,Nmax):
             for m in range(n + 1):
                 P, dP = lpmn(m, n, np.cos(theta_val))
                 N_lm = schmidt_semi_normalization(n, m)
-                index = int((n+2)*(n-1)/2 + m)
+
+                # gnm index
+                # (n-1+3)*(n-1)/2 + m
+                gnm_index = int((n+2)*(n-1)/2 + m)
+                # hnm index
+                # (n-1+3)*(n-1)/2 - (n-1) + m-1 + gnm_num (= (n+3)*n/2
+                hnm_index = int((n+2)*(n-1)/2-(n-1)+m-1 + (Nmax+3)*Nmax/2)
                 # Contribution to Br from gnm
-                A[3*i, index] = (n + 1) * (r_val**(-n - 2)) * np.cos(m * phi_val) * P[m, n] * N_lm
-                # Contribution to Br from hnm
-                A[3*i, index + num_coeffs] = (n + 1) * (r_val**(-n - 2)) * np.sin(m * phi_val) * P[m, n] * N_lm
+                A[3*i, gnm_index] = (n + 1) * (r_val**(-n - 2)) * np.cos(m * phi_val) * P[m, n] * N_lm
                 # Contribution to Btheta from gnm
-                A[3*i + 1, index] = -(r_val**(-n - 2)) * np.cos(m * phi_val) * (-np.sin(theta_val)) * dP[m, n] * N_lm
-                # Contribution to Btheta from hnm
-                A[3*i + 1, index + num_coeffs] = -(r_val**(-n - 2)) * np.sin(m * phi_val) * (-np.sin(theta_val)) * dP[m, n] * N_lm
+                A[3*i + 1, gnm_index] = -(r_val**(-n - 2)) * np.cos(m * phi_val) * (-np.sin(theta_val)) * dP[m, n] * N_lm
                 # Contribution to Bphi from gnm
-                A[3*i + 2, index] = m * (r_val**(-n - 2)) * np.sin(m * phi_val) * P[m, n] * N_lm / np.sin(theta_val)
+                A[3*i + 2, gnm_index] = m * (r_val**(-n - 2)) * np.sin(m * phi_val) * P[m, n] * N_lm / np.sin(theta_val)
+
+                if m==0:
+                    continue
+                # Contribution to Br from hnm
+                A[3 * i, hnm_index] = (n + 1) * (r_val ** (-n - 2)) * np.sin(m * phi_val) * P[m, n] * N_lm
+                # Contribution to Btheta from hnm
+                A[3 * i + 1, hnm_index] = -(r_val ** (-n - 2)) * np.sin(m * phi_val) * (-np.sin(theta_val)) * \
+                                                   dP[m, n] * N_lm
                 # Contribution to Bphi from hnm
-                A[3*i + 2, index + num_coeffs] = m * (r_val**(-n - 2)) * (-np.cos(m * phi_val)) * P[m, n] * N_lm / np.sin(theta_val)
+                A[3*i + 2, hnm_index] = m * (r_val**(-n - 2)) * (-np.cos(m * phi_val)) * P[m, n] * N_lm / np.sin(theta_val)
     print(f'SchmidtMatrix calculate success. Shape = {A.shape}')
 
     return A

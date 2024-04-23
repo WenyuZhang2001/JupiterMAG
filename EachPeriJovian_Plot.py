@@ -149,10 +149,11 @@ for year in year_doy_pj.keys():
         year_doy = {year: [doy[0]]}
         date_list = Juno_Mag_Data_Make.dateList(year_doy)
 
-        Model = 'SVD'
+        # Model = 'SVD'
+        Model = 'jrm33'
 
-        path = 'Spherical_Harmonic_Model/'
-        # path=''
+        # path = 'Spherical_Harmonic_Model/'
+        path=''
         # Make Dir
         filename = f'{path}Result_pic/Juno_Orbit_{pj:0>2d}'
         os.makedirs(filename, exist_ok=True)
@@ -173,8 +174,8 @@ for year in year_doy_pj.keys():
         data = Data.loc[Time_start:Time_end]
 
         B_Ex = Juno_Mag_Data_Make.MagneticField_External(data)
-        # B_In = Juno_Mag_Data_Make.MagneticField_Internal(data, model=Model)
-        B_In = Spherical_Harmonic_InversionModel_Functions.calculate_Bfield(data, Nmax=20, path='Spherical_Harmonic_Model/2h_1sData',method='SVD')
+        B_In = Juno_Mag_Data_Make.MagneticField_Internal(data, model=Model,degree=20)
+        # B_In = Spherical_Harmonic_InversionModel_Functions.calculate_Bfield(data, Nmax=20, path='Spherical_Harmonic_Model/2h_1sData',method=Model)
 
         # Juno_MAG_FP = Juno_Mag_Data_Make.FootPrintCalculate(data)
 
@@ -217,8 +218,8 @@ for year in year_doy_pj.keys():
         data = Data.loc[Time_start:Time_end]
 
         B_Ex = Juno_Mag_Data_Make.MagneticField_External(data)
-        # B_In = Juno_Mag_Data_Make.MagneticField_Internal(data, model=Model)
-        B_In = Spherical_Harmonic_InversionModel_Functions.calculate_Bfield(data, Nmax=20, path='Spherical_Harmonic_Model/2h_1sData',method='SVD')
+        B_In = Juno_Mag_Data_Make.MagneticField_Internal(data, model=Model,degree=20)
+        # B_In = Spherical_Harmonic_InversionModel_Functions.calculate_Bfield(data, Nmax=20, path='Spherical_Harmonic_Model/2h_1sData',method=Model)
 
         # Juno_MAG_FP = Juno_Mag_Data_Make.FootPrintCalculate(data)
 

@@ -45,3 +45,12 @@ from scipy.special import lpmn,factorial
 # dP3 = (P1-P2)/2/1e-5
 # print(f'P = {P1[m,n]}, dP = {dP1[m,n]}')
 # print(dP3[m,n])
+
+import Spherical_Harmonic_InversionModel_Functions
+
+# gnm_hnm = Spherical_Harmonic_InversionModel_Functions.read_gnm_hnm_data(method='SVD', Nmax=2, path='Spherical_Harmonic_Model/2h_1sData')
+#
+# print(gnm_hnm)
+
+if 0**2:
+    print('0')

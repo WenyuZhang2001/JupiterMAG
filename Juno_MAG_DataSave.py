@@ -15,7 +15,11 @@ import numpy as np
 year_doy_pj = {'2016':[[240,1],[346,3]],
               '2017':[[33,4],[86,5],[139,6],[191,7],[244,8],[297,9],[350,10]],
               '2018':[[38,11],[91,12],[144,13],[197,14],[249,15],[302,16],[355,17]],
-              '2019':[[43,18],[96,19],[149,20]]}
+              '2019':[[43,18],[96,19],[149,20],[201,21],[254,22],[307,23],[360,24]],
+               '2020':[[48,25],[101,26],[154,27],[207,28],[259,29],[312,30],[365,31]],
+               '2021':[[52,32],[105,33],[159,34],[202,35],[245,36],[289,37],[333,38]],
+               '2022':[[12,39],[55,40],[99,41],[142,42],[186,43],[229,44],[272,45],[310,46],[348,47]],
+               '2023':[[22,48],[60,49],[98,50]]}
 
 
 # In[3]:
@@ -114,6 +118,6 @@ B_Ex = Juno_Mag_Data_Make.MagneticField_External(data)
 B_In = Juno_Mag_Data_Make.MagneticField_Internal(data,model=Model)
 
 
-data.to_csv('JunoFGMData/Processed_Data/Fist_20_Orbits_Data_1s_2h.csv')
-B_In.to_csv('JunoFGMData/Processed_Data/Fist_20_Orbits_B_In_1s_2h.csv')
-B_Ex.to_csv('JunoFGMData/Processed_Data/Fist_20_Orbits_B_Ex_1s_2h.csv')
+data.to_csv('JunoFGMData/Processed_Data/Fist_50_Orbits_Data_1s_2h.csv')
+B_In.to_csv('JunoFGMData/Processed_Data/Fist_50_Orbits_B_In_1s_2h.csv')
+B_Ex.to_csv('JunoFGMData/Processed_Data/Fist_50_Orbits_B_Ex_1s_2h.csv')

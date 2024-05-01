@@ -7,7 +7,7 @@ import datetime
 import CoordinateTransform
 import con2020
 import JupiterMag as jm
-import Juno_Mag_Data_Make
+import Juno_Mag_MakeData_Function
 import MyPlot_Functions
 import CoordinateTransform
 from scipy.special import lpmn,factorial
@@ -78,7 +78,7 @@ data['theta'] = theta/360*2*np.pi
 data['phi'] = phi/360*2*np.pi
 data['Longitude'] = Longitude.flatten()
 data['Latitude'] = Latitude.flatten()
-# B_In = Juno_Mag_Data_Make.MagneticField_Internal(data)
+# B_In = Juno_Mag_MakeData_Function.MagneticField_Internal(data)
 # data['Br'] = B_In['Br']
 # data['Btheta'] = B_In['Btheta']
 # data['Bphi'] = B_In['Bphi']

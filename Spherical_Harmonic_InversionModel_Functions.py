@@ -2,7 +2,7 @@
 import pandas as pd
 
 import CoordinateTransform
-import Juno_Mag_Data_Make
+import Juno_Mag_MakeData_Function
 import os
 import numpy as np
 from scipy.linalg import lstsq
@@ -130,7 +130,7 @@ def Schmidt_Matrix(data,Nmax):
 
     return A
 
-def calculate_Bfield(data,path='Spherical_Harmonic_Model',Nmax=10,method='SVD',Ridge_alpha=0.1):
+def calculate_Bfield(data,path='Spherical_Harmonic_Model',Nmax=10,method='SVD',Ridge_alpha=0.1,Rc=1.0):
     '''
 
     :param data:  data [theta] and [phi] is in degree, this function will auto trans it to rad and trans back at the end
@@ -149,6 +149,7 @@ def calculate_Bfield(data,path='Spherical_Harmonic_Model',Nmax=10,method='SVD',R
         B_Model = ridge_model.predict(SchmidtMatrix)
     else:
         gnm_hnm_coeffi = read_gnm_hnm_data(path=path,Nmax=Nmax,method=method)
+        ParameterScale(gnm_hnm_coeffi,Nmax=Nmax,Rc=Rc)
         B_Model = np.dot(SchmidtMatrix,gnm_hnm_coeffi)
 
     B_Model = B_Model.reshape((int(len(B_Model)/3),3))
@@ -177,3 +178,21 @@ def calculate_Bfield(data,path='Spherical_Harmonic_Model',Nmax=10,method='SVD',R
 
 
     return B_Model_df
+
+def ParameterScale(gnm_hnm_coeffi,Nmax,Rc = 1.0):
+    for n in range(1, Nmax + 1):
+        for m in range(n + 1):
+            # gnm index
+            # (n-1+3)*(n-1)/2 + m
+            gnm_index = int((n + 2) * (n - 1) / 2 + m)
+            # hnm index
+            # (n-1+3)*(n-1)/2 - (n-1) + m-1 + gnm_num (= (n+3)*n/2
+            hnm_index = int((n + 2) * (n - 1) / 2 - (n - 1) + m - 1 + (Nmax + 3) * Nmax / 2)
+
+            Scale = Rc**(n-1)
+
+            gnm_hnm_coeffi[gnm_index] = gnm_hnm_coeffi[gnm_index] * Scale
+            gnm_hnm_coeffi[hnm_index] = gnm_hnm_coeffi[hnm_index] * Scale
+
+    return
+

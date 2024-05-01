@@ -4,7 +4,7 @@
 # In[1]:
 
 
-import Juno_Mag_Data_Make
+import Juno_Mag_MakeData_Function
 import pandas as pd
 import numpy as np
 
@@ -31,9 +31,9 @@ def Save_60sData(year_doy_pj):
             pj = doy[1]
             year_doy = {year:[doy[0]]}
             # read data     
-            data = Juno_Mag_Data_Make.Read_Data_60s(year_doy)
+            data = Juno_Mag_MakeData_Function.Read_Data_60s(year_doy)
             # FLT
-            Juno_MAG_FP = Juno_Mag_Data_Make.FootPrintCalculate(data)
+            Juno_MAG_FP = Juno_Mag_MakeData_Function.FootPrintCalculate(data)
 
             data = pd.concat([data,Juno_MAG_FP],axis=1)
             data['PJ'] = np.ones(len(data))*pj
@@ -51,9 +51,9 @@ def Save_1sData(year_doy_pj):
             pj = doy[1]
             year_doy = {year:[doy[0]]}
             # read data     
-            data = Juno_Mag_Data_Make.Read_Data_1s(year_doy)
+            data = Juno_Mag_MakeData_Function.Read_Data_1s(year_doy)
             # FLT
-            Juno_MAG_FP = Juno_Mag_Data_Make.FootPrintCalculate(data)
+            Juno_MAG_FP = Juno_Mag_MakeData_Function.FootPrintCalculate(data)
 
             data = pd.concat([data,Juno_MAG_FP],axis=1)
             data['PJ'] = np.ones(len(data))*pj
@@ -87,20 +87,20 @@ def read_data(year_doy_pj):
         for doy in year_doy_pj[year]:
             pj = doy[1]
             year_doy = {year:[doy[0]]}
-            date_list = Juno_Mag_Data_Make.dateList(year_doy)
+            date_list = Juno_Mag_MakeData_Function.dateList(year_doy)
 
             # read data
-            Data = Juno_Mag_Data_Make.Read_Data_1s(year_doy)
+            Data = Juno_Mag_MakeData_Function.Read_Data_1s(year_doy)
 
             # 24 hours data
             # Time_start = date_list['Time'].iloc[0]
-            # Time_end = Time_start+Juno_Mag_Data_Make.hour_1*24
+            # Time_end = Time_start+Juno_Mag_MakeData_Function.hour_1*24
 
             # Check the periJovian point time
             PeriJovian_time = Data['r'].idxmin()
             # 2 hour window data
-            Time_start = PeriJovian_time - Juno_Mag_Data_Make.hour_1 * 1
-            Time_end = Time_start + Juno_Mag_Data_Make.hour_1 * 3
+            Time_start = PeriJovian_time - Juno_Mag_MakeData_Function.hour_1 * 1
+            Time_end = Time_start + Juno_Mag_MakeData_Function.hour_1 * 3
 
             data_day = Data.loc[Time_start:Time_end]
 
@@ -114,8 +114,8 @@ def read_data(year_doy_pj):
 data = read_data(year_doy_pj)
 
 # Calculate the Internal Field
-B_Ex = Juno_Mag_Data_Make.MagneticField_External(data)
-B_In = Juno_Mag_Data_Make.MagneticField_Internal(data,model=Model)
+B_Ex = Juno_Mag_MakeData_Function.MagneticField_External(data)
+B_In = Juno_Mag_MakeData_Function.MagneticField_Internal(data,model=Model)
 
 
 data.to_csv('JunoFGMData/Processed_Data/Fist_50_Orbits_Data_1s_2h.csv')

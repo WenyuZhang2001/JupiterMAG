@@ -13,7 +13,7 @@ import datetime
 import CoordinateTransform
 import con2020
 import JupiterMag as jm
-import Juno_Mag_Data_Make
+import Juno_Mag_MakeData_Function
 import MyPlot_Functions
 
 

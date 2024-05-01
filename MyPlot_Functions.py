@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from datetime import timedelta
 import datetime
 import CoordinateTransform
-import Juno_Mag_Data_Make
+import Juno_Mag_MakeData_Function
 
 
 # In[ ]:
@@ -97,7 +97,7 @@ def Plot_Juno_Position(data,pj=99,Savefig=True,ShowPlot=True,path=''):
     
     # plt.tight_layout()
     if Savefig:
-        plt.savefig(f'{path}Result_pic/Juno_Orbit_{pj:0>2d}/r_{Time_start}.jpg',dpi=200)
+        plt.savefig(f'{path}/EachPeriJovian/Juno_Orbit_{pj:0>2d}/r_{Time_start}.jpg',dpi=200)
     if ShowPlot:
         plt.show()
     else:
@@ -149,7 +149,7 @@ def Plot_Bfeild(data,B_In,B_Ex,pj=99,Coordinate='Sys3',Savefig=True,Model='jrm33
         
         plt.tight_layout()
         if Savefig:
-            plt.savefig(f'{path}Result_pic/Juno_Orbit_{pj:0>2d}/{Coordinate}/Data_Ex+{Model}_{Time_start}.jpg',dpi=200)
+            plt.savefig(f'{path}/EachPeriJovian/Juno_Orbit_{pj:0>2d}/{Coordinate}/Data_Ex+{Model}_{Time_start}.jpg',dpi=200)
         if ShowPlot:
             plt.show()
         else:
@@ -188,7 +188,7 @@ def Plot_Bfeild(data,B_In,B_Ex,pj=99,Coordinate='Sys3',Savefig=True,Model='jrm33
         
         plt.tight_layout()
         if Savefig:
-            plt.savefig(f'{path}Result_pic/Juno_Orbit_{pj:0>2d}/{Coordinate}/Data_Ex+{Model}_{Time_start}.jpg',dpi=200)
+            plt.savefig(f'{path}/EachPeriJovian/Juno_Orbit_{pj:0>2d}/{Coordinate}/Data_Ex+{Model}_{Time_start}.jpg',dpi=200)
         if ShowPlot:
             plt.show()
         else:
@@ -276,7 +276,7 @@ def Plot_Delta_Bfield(data,B_In,B_Ex,pj=99,Coordinate='Sys3',
         
         plt.tight_layout()
         if Savefig:
-            plt.savefig(f'{path}Result_pic/Juno_Orbit_{pj:0>2d}/{Coordinate}/Data-{Model}_Ex_{Time_start}.jpg',dpi=200)
+            plt.savefig(f'{path}/EachPeriJovian/Juno_Orbit_{pj:0>2d}/{Coordinate}/Data-{Model}_Ex_{Time_start}.jpg',dpi=200)
         if ShowPlot:
             plt.show()
         else:
@@ -350,7 +350,7 @@ def Plot_Delta_Bfield(data,B_In,B_Ex,pj=99,Coordinate='Sys3',
         
         plt.tight_layout()
         if Savefig:
-            plt.savefig(f'{path}Result_pic/Juno_Orbit_{pj:0>2d}/{Coordinate}/Data-{Model}_Ex_{Time_start}.jpg',dpi=200)
+            plt.savefig(f'{path}/EachPeriJovian/Juno_Orbit_{pj:0>2d}/{Coordinate}/Data-{Model}_Ex_{Time_start}.jpg',dpi=200)
         if ShowPlot:
             plt.show()
         else:
@@ -421,7 +421,7 @@ def Plot_Delta_Bfield(data,B_In,B_Ex,pj=99,Coordinate='Sys3',
         
         plt.tight_layout()
         if Savefig:
-            plt.savefig(f'{path}Result_pic/Juno_Orbit_{pj:0>2d}/{Coordinate}/Data-{Model}-Ex|Btotal_{Time_start}.jpg',dpi=200)
+            plt.savefig(f'{path}/EachPeriJovian/Juno_Orbit_{pj:0>2d}/{Coordinate}/Data-{Model}-Ex|Btotal_{Time_start}.jpg',dpi=200)
         if ShowPlot:
             plt.show()
         else:
@@ -492,7 +492,7 @@ def Plot_Delta_Bfield(data,B_In,B_Ex,pj=99,Coordinate='Sys3',
         
         plt.tight_layout()
         if Savefig:
-            plt.savefig(f'{path}Result_pic/Juno_Orbit_{pj:0>2d}/{Coordinate}/Data-{Model}-Ex|Btotal_{Time_start}.jpg',dpi=200)
+            plt.savefig(f'{path}/EachPeriJovian/Juno_Orbit_{pj:0>2d}/{Coordinate}/Data-{Model}-Ex|Btotal_{Time_start}.jpg',dpi=200)
         if ShowPlot:
             plt.show()
         else:
@@ -579,7 +579,7 @@ def Plot_Juno_Footprint(Juno_MAG_FP,pj=99,B_component='Br',ShowPlot=True,Savefig
     
     plt.tight_layout()
     if Savefig:
-        plt.savefig(f'{path}Result_pic/Juno_Orbit_{pj:0>2d}/Juno_FP/Juno_FP_plot_{Time_start}.jpg',dpi=200)
+        plt.savefig(f'{path}/EachPeriJovian/Juno_Orbit_{pj:0>2d}/Juno_FP/Juno_FP_plot_{Time_start}.jpg',dpi=200)
     if ShowPlot:
         plt.show()
     else:
@@ -636,7 +636,7 @@ def Plot_Delta_Bfield_Btotal(data,B_In,B_Ex,pj=99,Coordinate='Sys3',
         
         plt.tight_layout()
         if Savefig:
-            plt.savefig(f'{path}Result_pic/Juno_Orbit_{pj:0>2d}/{Coordinate}/delta_Btotal|Btotal_{Time_start}.jpg',dpi=200)
+            plt.savefig(f'{path}/EachPeriJovian/Juno_Orbit_{pj:0>2d}/{Coordinate}/delta_Btotal|Btotal_{Time_start}.jpg',dpi=200)
         if ShowPlot:
             plt.show()
         else:
@@ -679,7 +679,7 @@ def Plot_Delta_Bfield_Btotal(data,B_In,B_Ex,pj=99,Coordinate='Sys3',
         
         plt.tight_layout()
         if Savefig:
-            plt.savefig(f'{path}Result_pic/Juno_Orbit_{pj:0>2d}/{Coordinate}/delta_Btotal|Btotal_{Time_start}.jpg',dpi=200)
+            plt.savefig(f'{path}/EachPeriJovian/Juno_Orbit_{pj:0>2d}/{Coordinate}/delta_Btotal|Btotal_{Time_start}.jpg',dpi=200)
         if ShowPlot:
             plt.show()
         else:
@@ -795,7 +795,7 @@ def Plot_Juno_Footprint_thorughTime(Juno_MAG_FP,pj=99,ShowPlot=True,Savefig=True
 
     plt.tight_layout()
     if Savefig:
-        plt.savefig(f'{path}Result_pic/Juno_Orbit_{pj:0>2d}/Juno_FP/Juno_FP_plot_{Time_start}_throughTime.jpg', dpi=200)
+        plt.savefig(f'{path}/EachPeriJovian/Juno_Orbit_{pj:0>2d}/Juno_FP/Juno_FP_plot_{Time_start}_throughTime.jpg', dpi=200)
     if ShowPlot:
         plt.show()
     else:
@@ -834,8 +834,8 @@ def Plot_Juno_Footprint_Anomaly(Juno_MAG_FP,pj=99,Extmodel ='Con2020',MaxLen=500
     South_Anomaly['Y'] = Y
     South_Anomaly['Z'] = Z
 
-    North_Anomaly_FP = Juno_Mag_Data_Make.FootPrintCalculate(North_Anomaly,Extmodel=Extmodel,maxLen=MaxLen)
-    South_Anomaly_FP = Juno_Mag_Data_Make.FootPrintCalculate(South_Anomaly,Extmodel=Extmodel,maxLen=MaxLen)
+    North_Anomaly_FP = Juno_Mag_MakeData_Function.FootPrintCalculate(North_Anomaly,Extmodel=Extmodel,maxLen=MaxLen)
+    South_Anomaly_FP = Juno_Mag_MakeData_Function.FootPrintCalculate(South_Anomaly,Extmodel=Extmodel,maxLen=MaxLen)
 
     ax1 = plt.subplot(2, 1, 1)
     plt.title(f'Juno Magnetic Field Line FootPrint North Anomaly \n {Time_start}-{Time_end} \n Orbit{pj:0>2d}')
@@ -881,7 +881,7 @@ def Plot_Juno_Footprint_Anomaly(Juno_MAG_FP,pj=99,Extmodel ='Con2020',MaxLen=500
 
     plt.tight_layout()
     if Savefig:
-        plt.savefig(f'{path}Result_pic/Juno_Orbit_{pj:0>2d}/Juno_FP/Juno_FP_Anomaly_plot_{Time_start}_.jpg', dpi=200)
+        plt.savefig(f'{path}/EachPeriJovian/Juno_Orbit_{pj:0>2d}/Juno_FP/Juno_FP_Anomaly_plot_{Time_start}_.jpg', dpi=200)
     if ShowPlot:
         plt.show()
     else:

@@ -7,7 +7,7 @@ import datetime
 import CoordinateTransform
 import con2020
 import JupiterMag as jm
-import Juno_Mag_Data_Make
+import Juno_Mag_MakeData_Function
 import MyPlot_Functions
 
 
@@ -16,8 +16,8 @@ Coordinate = 'Spherical'
 Juno_MAG_Max_delta_Btotal = pd.read_csv(f'Result_data/Juno_MAG_MaxDeltaBtotal_{Coordinate}.csv')
 Juno_MAG_Max_Btotal_delta = pd.read_csv(f'Result_data/Juno_MAG_MaxBtotalDelta_{Coordinate}.csv')
 
-Juno_FP_Max_delta_Btotal = Juno_Mag_Data_Make.FootPrintCalculate(Juno_MAG_Max_delta_Btotal)
-Juno_FP_Max_Btotal_delta = Juno_Mag_Data_Make.FootPrintCalculate(Juno_MAG_Max_Btotal_delta)
+Juno_FP_Max_delta_Btotal = Juno_Mag_MakeData_Function.FootPrintCalculate(Juno_MAG_Max_delta_Btotal)
+Juno_FP_Max_Btotal_delta = Juno_Mag_MakeData_Function.FootPrintCalculate(Juno_MAG_Max_Btotal_delta)
 
 plt.figure(figsize=(20,10))
 

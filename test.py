@@ -48,9 +48,7 @@ from scipy.special import lpmn,factorial
 
 import Spherical_Harmonic_InversionModel_Functions
 
-# gnm_hnm = Spherical_Harmonic_InversionModel_Functions.read_gnm_hnm_data(method='SVD', Nmax=2, path='Spherical_Harmonic_Model/2h_1sData')
-#
-# print(gnm_hnm)
+gnm_hnm = Spherical_Harmonic_InversionModel_Functions.read_gnm_hnm_data(method='SVD', Nmax=1, path='Spherical_Harmonic_Model/First20_Orbit_Model')
 
-if 0**2:
-    print('0')
+print(gnm_hnm)
+

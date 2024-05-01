@@ -7,7 +7,7 @@ import joblib
 import matplotlib.pyplot as plt
 import os
 import CoordinateTransform
-import Juno_Mag_Data_Make
+import Juno_Mag_MakeData_Function
 import Spherical_Harmonic_InversionModel_Functions
 import MyPlot_Functions
 
@@ -33,7 +33,7 @@ data['Latitude'] = Latitude.flatten()
 
 
 Model = 'jrm33'
-B_In = Juno_Mag_Data_Make.MagneticField_Internal(data,model=Model)
+B_In = Juno_Mag_MakeData_Function.MagneticField_Internal(data,model=Model)
 
 
 # path = 'Spherical_Harmonic_Model/Surface_Data'

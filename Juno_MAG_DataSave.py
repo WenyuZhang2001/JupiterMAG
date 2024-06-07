@@ -8,6 +8,7 @@ import Juno_Mag_MakeData_Function
 import pandas as pd
 import numpy as np
 
+import Spherical_Harmonic_InversionModel_Functions
 
 # In[2]:
 
@@ -31,7 +32,7 @@ def Save_60sData(year_doy_pj):
             pj = doy[1]
             year_doy = {year:[doy[0]]}
             # read data     
-            data = Juno_Mag_MakeData_Function.Read_Data_60s(year_doy)
+            data = Juno_Mag_MakeData_Function.Read_Data(year_doy,freq=60)
             # FLT
             Juno_MAG_FP = Juno_Mag_MakeData_Function.FootPrintCalculate(data)
 
@@ -51,7 +52,7 @@ def Save_1sData(year_doy_pj):
             pj = doy[1]
             year_doy = {year:[doy[0]]}
             # read data     
-            data = Juno_Mag_MakeData_Function.Read_Data_1s(year_doy)
+            data = Juno_Mag_MakeData_Function.Read_Data(year_doy,freq=1)
             # FLT
             Juno_MAG_FP = Juno_Mag_MakeData_Function.FootPrintCalculate(data)
 
@@ -85,12 +86,12 @@ def read_data(year_doy_pj):
 
     for year in year_doy_pj.keys():
         for doy in year_doy_pj[year]:
-            pj = doy[1]
+            # pj = doy[1]
             year_doy = {year:[doy[0]]}
-            date_list = Juno_Mag_MakeData_Function.dateList(year_doy)
+            # date_list = Juno_Mag_MakeData_Function.dateList(year_doy)
 
             # read data
-            Data = Juno_Mag_MakeData_Function.Read_Data_1s(year_doy)
+            Data = Juno_Mag_MakeData_Function.Read_Data(year_doy,freq=1)
 
             # 24 hours data
             # Time_start = date_list['Time'].iloc[0]
@@ -115,9 +116,9 @@ data = read_data(year_doy_pj)
 
 # Calculate the Internal Field
 B_Ex = Juno_Mag_MakeData_Function.MagneticField_External(data)
-B_In = Juno_Mag_MakeData_Function.MagneticField_Internal(data,model=Model)
+# B_In = Juno_Mag_MakeData_Function.MagneticField_Internal(data,model=Model)
 
 
-data.to_csv('JunoFGMData/Processed_Data/Fist_50_Orbits_Data_1s_2h.csv')
-B_In.to_csv('JunoFGMData/Processed_Data/Fist_50_Orbits_B_In_1s_2h.csv')
-B_Ex.to_csv('JunoFGMData/Processed_Data/Fist_50_Orbits_B_Ex_1s_2h.csv')
+# data.to_csv('JunoFGMData/Processed_Data/Fist_50_Orbits_Data_1s_2h.csv')
+# B_In.to_csv('JunoFGMData/Processed_Data/Fist_50_Orbits_B_In_1s_2h.csv')
+# B_Ex.to_csv('JunoFGMData/Processed_Data/Fist_50_Orbits_B_Ex_1s_2h.csv')

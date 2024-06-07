@@ -61,15 +61,15 @@ def dateList(year_doy):
 
     date_list['Time'] = date_list['year']+'-'+date_list['doy'].map(str)
     date_list['Time'] = pd.to_datetime(date_list['Time'],format='%Y-%j')
-    
+
     return date_list
 
 
 def change_stsTocsv(directory_path=''):
-    
+
     if not os.path.exists(directory_path):
         os.makedirs(directory_path)
-        
+
     # List all files in the directory
     for filename in os.listdir(directory_path):
         # Check if the file ends with .sts
@@ -85,7 +85,7 @@ def change_stsTocsv(directory_path=''):
 def JupiterMagExternal(Data_1,Data_2,Data_3,cartesianIn = False,cartesianOut = False):
     # initial model
     External_model = con2020.Model(CartesianIn=cartesianIn,CartesianOut=cartesianOut)
-    
+
     # calculate
     B = External_model.Field(Data_1,Data_2,Data_3)
     return B
@@ -93,39 +93,66 @@ def JupiterMagExternal(Data_1,Data_2,Data_3,cartesianIn = False,cartesianOut = F
 def JupiterMagInternal(Data_1,Data_2,Data_3,model = 'jrm33',cartesianIn = False,cartesianOut = False,degree=10):
     # initial model
     jm.Internal.Config(Model=model,CartesianIn=cartesianIn,CartesianOut=cartesianOut,Degree=degree)
-    
+
     #calculate
     B_1,B_2,B_3 = jm.Internal.Field(Data_1,Data_2,Data_3)
-    
+
     return B_1,B_2,B_3
 
+def data_changeIndex(data):
+    data['Time'] = data['Year'].map(str) + '-' + data['Doy'].map(str) + '-' + data['Hour'].map(str) \
+                   + '-' + data['Min'].map(str) + '-' + data['Sec'].map(str) + '-' + data['Msec'].map(str)
+    data['Time'] = pd.to_datetime(data['Time'], format='%Y-%j-%H-%M-%S-%f')
+    data = data.set_index('Time')
+    return data
 def data_process(data,Rj = 71492):
     data['X'] = data['X']/Rj
     data['Y'] = data['Y']/Rj
     data['Z'] = data['Z']/Rj
-    
+    data['Xss'] = data['Xss'] / Rj
+    data['Yss'] = data['Yss'] / Rj
+    data['Zss'] = data['Zss'] / Rj
+
     r,theta,phi = CoordinateTransform.CartesiantoSpherical(data['X'].to_numpy(),
                                                            data['Y'].to_numpy(),
                                                            data['Z'].to_numpy())
     Lat = 90-theta
     Long = np.where(phi<0,360+phi,phi)
-    
+
     data['r'] = r
     data['theta'] = theta
     data['phi'] = phi
     data['Latitude'] = Lat
     data['Longitude'] = Long
-    
-    data['Time'] = data['Year'].map(str)+'-'+data['Doy'].map(str)+'-'+data['Hour'].map(str)\
-                 +'-'+data['Min'].map(str)+'-'+data['Sec'].map(str)+'-'+data['Msec'].map(str)
-    data['Time'] = pd.to_datetime(data['Time'],format='%Y-%j-%H-%M-%S-%f')
-    data = data.set_index('Time')
-    
+
+    r_ss, theta_ss, phi_ss = CoordinateTransform.CartesiantoSpherical(data['Xss'].to_numpy(),
+                                                             data['Yss'].to_numpy(),
+                                                             data['Zss'].to_numpy())
+    Lat_ss = 90 - theta_ss
+    Long_ss = np.where(phi_ss < 0, 360 + phi_ss, phi_ss)
+    LocalTime = Long_ss*24/360 + 12.0
+    LocalTime = np.where(LocalTime >= 24,LocalTime-24,LocalTime)
+    data['r_ss'] = r_ss
+    data['theta_ss'] = theta_ss
+    data['phi_ss'] = phi_ss
+    data['Latitude_ss'] = Lat_ss
+    data['Longitude_ss'] = Long_ss
+    data['LocalTime'] = LocalTime
+
+    # data['Time'] = data['Year'].map(str)+'-'+data['Doy'].map(str)+'-'+data['Hour'].map(str)\
+    #              +'-'+data['Min'].map(str)+'-'+data['Sec'].map(str)+'-'+data['Msec'].map(str)
+    # data['Time'] = pd.to_datetime(data['Time'],format='%Y-%j-%H-%M-%S-%f')
+    # data = data.set_index('Time')
+
     data['Bx'] = data['Bx'].map(float)
     data['By'] = data['By'].map(float)
     data['Bz'] = data['Bz'].map(float)
     data['Btotal'] = (data['Bx']**2+data['By']**2+data['Bz']**2)**0.5
-    
+    data['BxSS'] = data['BxSS'].map(float)
+    data['BySS'] = data['BySS'].map(float)
+    data['BzSS'] = data['BzSS'].map(float)
+    data['BtotalSS'] = (data['BxSS'] ** 2 + data['BySS'] ** 2 + data['BzSS'] ** 2) ** 0.5
+
     Br,Btheta,Bphi = CoordinateTransform.CartesiantoSpherical_Bfield(data['X'].to_numpy(),
                                                                     data['Y'].to_numpy(),
                                                                     data['Z'].to_numpy(),
@@ -135,104 +162,95 @@ def data_process(data,Rj = 71492):
     data['Br'] = Br
     data['Bphi'] = Bphi
     data['Btheta'] = Btheta
+
+    Br_ss, Btheta_ss, Bphi_ss = CoordinateTransform.CartesiantoSpherical_Bfield(data['Xss'].to_numpy(),
+                                                                       data['Yss'].to_numpy(),
+                                                                       data['Zss'].to_numpy(),
+                                                                       data['BxSS'].to_numpy(),
+                                                                       data['BySS'].to_numpy(),
+                                                                       data['BzSS'].to_numpy())
+    data['Br_ss'] = Br_ss
+    data['Bphi_ss'] = Bphi_ss
+    data['Btheta_ss'] = Btheta_ss
+
     return data
 
 
 
-def Read_Data_1s(year_doy,directory_path = 'JunoFGMData/'):
+def Read_Data(year_doy,directory_path = 'JunoFGMData/',freq=1):
     change_stsTocsv(directory_path)
-    col_names = ['Year','Doy','Hour','Min','Sec','Msec','DDay','Bx','By','Bz','Range','X','Y','Z']
+    col_names_pc = ['Year','Doy','Hour','Min','Sec','Msec','DDay','Bx','By','Bz','Range','X','Y','Z']
+    col_names_ss = ['Year','Doy','Hour','Min','Sec','Msec','DDay','BxSS','BySS','BzSS','Range','Xss','Yss','Zss']
+    col_names = ['Bx','By','Bz','X','Y','Z','BxSS','BySS','BzSS','Xss','Yss','Zss']
     data = pd.DataFrame(columns=col_names)
     for year in year_doy.keys():
         for doy in year_doy[year]:
-            
-            pattern = directory_path + f'fgm_jno_l3_{year}{doy:0>3d}pc_*r1s_*.csv'
-            
-            file_list = glob.glob(pattern)
-    
-            dataframes_list = []
+
+            pattern_pc = directory_path + f'fgm_jno_l3_{year}{doy:0>3d}pc_*r{freq}s_*.csv'
+            pattern_ss = directory_path + f'fgm_jno_l3_{year}{doy:0>3d}ss_*r{freq}s_*.csv'
+
+            file_list_pc = glob.glob(pattern_pc)
+            file_list_ss = glob.glob(pattern_ss)
+
+            dataframes_list_pc = []
+            dataframes_list_ss = []
             # Iterate through the list of file names
-            for file_name in file_list:
+
+            # pc coordinate
+            for file_name in file_list_pc:
                 print('read data file: '+file_name)
                 # Read each CSV file into a DataFrame
-                temp_data = pd.read_csv(file_name,header = None,sep = '\s+',names=col_names,index_col=False)
+                temp_data = pd.read_csv(file_name,header = None,sep = '\s+',names=col_names_pc,index_col=False)
                 temp_data = temp_data.dropna()
-                
-                # Optionally, add a column to track the file source if necessary
-                temp_data['source_file'] = file_name
+                temp_data = data_changeIndex(temp_data)
+                temp_data.drop(['Year', 'Doy', 'Hour', 'Min', 'Sec', 'Msec', 'DDay', 'Range'], axis=1, inplace=True)
+
                 # Append the DataFrame to the list
-                dataframes_list.append(temp_data)
+                dataframes_list_pc.append(temp_data)
+
+            # ss coordinate
+            for file_name in file_list_ss:
+                print('read data file: ' + file_name)
+                # Read each CSV file into a DataFrame
+                temp_data = pd.read_csv(file_name, header=None, sep='\s+', names=col_names_ss, index_col=False)
+                temp_data = temp_data.dropna()
+                temp_data = data_changeIndex(temp_data)
+                temp_data.drop(['Year','Doy','Hour','Min','Sec','Msec','DDay','Range'],axis=1,inplace=True)
+
+                # Append the DataFrame to the list
+                dataframes_list_ss.append(temp_data)
+
 
             # Optionally, combine all DataFrames into a single DataFrame
             try:
-                combined_df = pd.concat(dataframes_list, ignore_index=True)
+                combined_df_pc = pd.concat(dataframes_list_pc)
+                combined_df_ss = pd.concat(dataframes_list_ss)
+                combined_df = pd.concat([combined_df_pc,combined_df_ss],axis=1,join='inner')
             except:
                 print(f'No File in the doy {year}{doy}')
                 continue
-                
-            del combined_df['source_file']
+
             if data.empty:
                 data = combined_df
             else:
-                data = pd.concat([data,combined_df],ignore_index=True)
-                
+                data = pd.concat([data,combined_df])
+
     # process data 
     # simple caculations and unit transform
     data = data_process(data)
     data = data.sort_index()
-    if data.empty != True:
+
+    if not data.empty:
         print(f'Data Time: {data.index[0]} - {data.index[-1]}')
-    
+    else:
+        print('No data on those days!')
     return data
 
 
-def Read_Data_60s(year_doy,directory_path = 'JunoFGMData/'):
-    change_stsTocsv(directory_path)
-    col_names = ['Year','Doy','Hour','Min','Sec','Msec','DDay','Bx','By','Bz','Range','X','Y','Z']
-    data = pd.DataFrame(columns=col_names)
-    for year in year_doy.keys():
-        for doy in year_doy[year]:
-            
-            pattern = directory_path + f'fgm_jno_l3_{year}{doy:0>3d}pc_*r60s_*.csv'
-            
-            file_list = glob.glob(pattern)
-    
-            dataframes_list = []
-            # Iterate through the list of file names
-            for file_name in file_list:
-                print('read data file: '+file_name)
-                # Read each CSV file into a DataFrame
-                temp_data = pd.read_csv(file_name,header = None,sep = '\s+',names=col_names,index_col=False)
-                temp_data = temp_data.dropna()
-                
-                # Optionally, add a column to track the file source if necessary
-                temp_data['source_file'] = file_name
-                # Append the DataFrame to the list
-                dataframes_list.append(temp_data)
 
-            # Optionally, combine all DataFrames into a single DataFrame
-            try:
-                combined_df = pd.concat(dataframes_list, ignore_index=True)
-            except:
-                print(f'No File in the doy {year}{doy}')
-                continue
-            del combined_df['source_file']
-            if data.empty:
-                data = combined_df
-            else:
-                data = pd.concat([data,combined_df],ignore_index=True)
-                
-    # process data 
-    # simple caculations and unit transform
-    data = data_process(data)
-    data = data.sort_index()
-    if data.empty !=True:
-        print(f'Data Time: {data.index[0]} - {data.index[-1]}')
-    
-    return data
 
 def MagneticField_Internal(data,model='jrm33',degree=10):
-    
+
     # Internal
     BxIn,ByIn,BzIn = JupiterMagInternal(data['X'].to_numpy(),
                                       data['Y'].to_numpy(),
@@ -242,22 +260,22 @@ def MagneticField_Internal(data,model='jrm33',degree=10):
     B_In_np = np.vstack((BxIn,ByIn,BzIn)).T
     B_In = pd.DataFrame(B_In_np,columns=['Bx','By','Bz'],index=data['X'].index)
     B_In['Btotal'] = (B_In['Bx']**2 + B_In['By']**2 + B_In['Bz']**2)**0.5
-    
+
     Br,Btheta,Bphi = CoordinateTransform.CartesiantoSpherical_Bfield(data['X'].to_numpy(),
                                                                     data['Y'].to_numpy(),
                                                                     data['Z'].to_numpy(),
                                                                     B_In['Bx'].to_numpy(),
                                                                     B_In['By'].to_numpy(),
                                                                     B_In['Bz'].to_numpy())
-    
+
     B_In['Br'] = Br
     B_In['Bphi'] = Bphi
     B_In['Btheta'] = Btheta
-    
+
     return B_In
 
 def MagneticField_External(data):
-    
+
     # External
     B_Ex_np = JupiterMagExternal(data['X'].to_numpy(),
                                       data['Y'].to_numpy(),
@@ -266,33 +284,33 @@ def MagneticField_External(data):
 
     B_Ex = pd.DataFrame(B_Ex_np,columns=['Bx','By','Bz'],index=data['X'].index)
     B_Ex['Btotal'] = (B_Ex['Bx']**2 + B_Ex['By']**2 + B_Ex['Bz']**2)**0.5
-    
+
     Br,Btheta,Bphi = CoordinateTransform.CartesiantoSpherical_Bfield(data['X'].to_numpy(),
                                                                     data['Y'].to_numpy(),
                                                                     data['Z'].to_numpy(),
                                                                     B_Ex['Bx'].to_numpy(),
                                                                     B_Ex['By'].to_numpy(),
                                                                     B_Ex['Bz'].to_numpy())
-    
+
     B_Ex['Br'] = Br
     B_Ex['Bphi'] = Bphi
     B_Ex['Btheta'] = Btheta
-    
+
     return B_Ex
 
 def JupiterMagFieldLineTrace(x,y,z,extmodel='none',traceDir=0,maxLen=5000):
-    
+
     jm.Con2020.Config(equation_type='analytic')
-    
+
     FLT = jm.TraceField(x,y,z,Verbose=False,IntModel='jrm33',ExtModel=extmodel,TraceDir=traceDir,MaxLen=maxLen)
 
-    
+
     return FLT
 
 def FootPrintCalculate(data,Extmodel='con2020',maxLen=5000):
-    
+
     data_FLT = JupiterMagFieldLineTrace(data['X'],data['Y'],data['Z'],extmodel=Extmodel,maxLen=maxLen)
-    
+
     North_FP_X,North_FP_Y,North_FP_Z = data_FLT.x[:,0],data_FLT.y[:,0],data_FLT.z[:,0]
     South_FP_X,South_FP_Y,South_FP_Z = data_FLT.x[range(len(data_FLT.x)),np.isnan(data_FLT.x).argmax(axis=1)-1],\
                                        data_FLT.y[range(len(data_FLT.x)),np.isnan(data_FLT.y).argmax(axis=1)-1],\
@@ -307,7 +325,7 @@ def FootPrintCalculate(data,Extmodel='con2020',maxLen=5000):
     South_FP_Long = np.where(South_FP_phi<0,360+South_FP_phi,South_FP_phi)
     North_FP_ArcLen = np.pi/2 - North_FP_Lat*2*np.pi/360
     South_FP_ArcLen = np.pi/2 + South_FP_Lat*2*np.pi/360
-    
+
     Juno_MAG_FP = pd.DataFrame()
     Juno_MAG_FP['North_FP_Lat'] = North_FP_Lat
     Juno_MAG_FP['South_FP_Lat'] = South_FP_Lat
@@ -325,7 +343,7 @@ def MinLat(Juno_MAG_FP,pj=99):
         print('Wrong PJ input!')
         return
     Juno_MAG_FP['PJ'] = np.ones(len(Juno_MAG_FP))*pj
-    
+
     try:
         Juno_MAG_FP_North = pd.read_csv('Result_data/Juno_MAG_FP_MinLatitudeNorth.csv',index_col=0)
         Juno_MAG_FP_North = pd.concat([Juno_MAG_FP_North,
@@ -334,7 +352,7 @@ def MinLat(Juno_MAG_FP,pj=99):
     except:
         Juno_MAG_FP_North = Juno_MAG_FP[Juno_MAG_FP['North_FP_Lat']==Juno_MAG_FP['North_FP_Lat'].min()]
         Juno_MAG_FP_North.to_csv('Result_data/Juno_MAG_FP_MinLatitudeNorth.csv')
-        
+
     try:
         Juno_MAG_FP_South = pd.read_csv('Result_data/Juno_MAG_FP_MinLatitudeSouth.csv',index_col=0)
         Juno_MAG_FP_South = pd.concat([Juno_MAG_FP_South,
@@ -406,10 +424,7 @@ def read_24hData(year_doy_pj,freq=60):
             date_list = dateList(year_doy)
 
             # read data
-            if freq == 60:
-                Data = Read_Data_60s(year_doy)
-            elif freq == 1:
-                Data = Read_Data_1s(year_doy)
+            Data = Read_Data(year_doy,freq=freq)
 
             # 24 hours data
             Time_start = date_list['Time'].iloc[0]

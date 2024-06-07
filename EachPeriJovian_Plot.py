@@ -154,7 +154,7 @@ for year in year_doy_pj.keys():
 
         # path = 'Spherical_Harmonic_Model/'
         # path=''
-        path = 'Spherical_Harmonic_Model/First50_Orbit_Model_1'
+        path = 'Spherical_Harmonic_Model/First50_Orbit_Model'
         # Make Dir
         filename = f'{path}/EachPeriJovian/Juno_Orbit_{pj:0>2d}'
         os.makedirs(filename, exist_ok=True)
@@ -166,8 +166,8 @@ for year in year_doy_pj.keys():
         os.makedirs(filename, exist_ok=True)
 
         # read data
-        Data = Juno_Mag_MakeData_Function.Read_Data_60s(year_doy)
-
+        Data = Juno_Mag_MakeData_Function.Read_Data(year_doy,freq=1)
+        Data = Data.iloc[::60]
         # # Doing the Rc=0.85
         # Data['r'] = Data['r']/0.85
 

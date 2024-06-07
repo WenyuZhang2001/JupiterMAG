@@ -6,34 +6,25 @@ from scipy.special import lpmn,factorial
 import joblib
 import os
 import Spherical_Harmonic_InversionModel_Functions
+import seaborn as sns
 
 
-
-
-
-
-year_doy_pj = {'2021':[[52,32]]}
-
-# Model Compared to
-Model = 'jrm33'
-
-# read the data
 def read_data(year_doy_pj):
     data = pd.DataFrame()
 
     for year in year_doy_pj.keys():
         for doy in year_doy_pj[year]:
             pj = doy[1]
-            year_doy = {year:[doy[0]]}
+            year_doy = {year: [doy[0]]}
             date_list = Juno_Mag_MakeData_Function.dateList(year_doy)
 
             # read data
-            Data = Juno_Mag_MakeData_Function.Read_Data_60s(year_doy)
-
+            Data = Juno_Mag_MakeData_Function.Read_Data(year_doy, freq=1)
+            Data = Data.iloc[::60]
 
             # 24 hours data
             Time_start = date_list['Time'].iloc[0]
-            Time_end = Time_start+Juno_Mag_MakeData_Function.hour_1*24
+            Time_end = Time_start + Juno_Mag_MakeData_Function.hour_1 * 24
 
             data_day = Data.loc[Time_start:Time_end]
 
@@ -45,21 +36,11 @@ def read_data(year_doy_pj):
     return data
 
 
-data = read_data(year_doy_pj)
-Time_start = data.index.min()
-Time_end = Time_start+Juno_Mag_MakeData_Function.hour_1*24
-# Time_start = data.index.min()+Juno_Mag_MakeData_Function.hour_1*4
-# Time_end = Time_start+Juno_Mag_MakeData_Function.hour_1*3
-# Time_end = Time_start+Juno_Mag_MakeData_Function.min_1*15
-
-data = data.loc[Time_start:Time_end]
-
-
 # Define a function to calculate RMS error
 def calculate_rms_error(B_pred, B_obs):
     return np.sqrt(np.mean((B_pred - B_obs)**2))
 
-def PLot_Bfield_Model(data,Nmax=10,path = 'Spherical_Harmonic_Model/',Model_Internal = 'jrm33',Model_Ridge_On = True,Ridge_alpha=0,Model_JRM_on = True,Model_SVD_On = True,Model_LSTSQ_On = True,Rc=1.0):
+def PLot_Bfield_Model(data,Nmax=10,path = 'Spherical_Harmonic_Model/',Model_Internal = 'jrm33',Model_Regularized_SVD_On = True,Model_JRM_on = True,Model_SVD_On = True,Model_LSTSQ_On = True,Rc=1.0,rc=1.0):
 
     Time_start = data.index.min()
     Time_end = data.index.max()
@@ -69,18 +50,22 @@ def PLot_Bfield_Model(data,Nmax=10,path = 'Spherical_Harmonic_Model/',Model_Inte
 
     B_In_obs = Spherical_Harmonic_InversionModel_Functions.B_In_obs_Calculate(data, B_Ex)
 
-    if Model_Ridge_On:
-        B_Model_Ridge = Spherical_Harmonic_InversionModel_Functions.calculate_Bfield(data,Nmax=Nmax,path=path,method='Ridge',Ridge_alpha=Ridge_alpha)
-        print('B Field by Ridged Model Calculated')
+
+
+    if Model_Regularized_SVD_On:
+        B_Model_Ridge = Spherical_Harmonic_InversionModel_Functions.calculate_Bfield(data,Nmax=Nmax,path=path,method='Regularized_SVD')
+        print('B Field by Regularized_SVD Model Calculated')
 
     if Model_SVD_On:
-
+        data['r'] = data['r'] / rc
         B_Model_SVD = Spherical_Harmonic_InversionModel_Functions.calculate_Bfield(data,Nmax=Nmax,path=path,method='SVD',Rc=Rc)
+        data['r'] = data['r'] * rc
         print('B Field by SVD Model Calculated')
 
     if Model_LSTSQ_On:
         B_Model_LSTSQ = Spherical_Harmonic_InversionModel_Functions.calculate_Bfield(data,Nmax=Nmax,path=path,method='LSTSQ')
         print('B Field by LSTSQ Model Calculated')
+
 
 
 
@@ -97,10 +82,9 @@ def PLot_Bfield_Model(data,Nmax=10,path = 'Spherical_Harmonic_Model/',Model_Inte
     if Model_JRM_on:
         RMS = calculate_rms_error(B_In[component].values, B_In_obs[component].values)
         plt.plot(data.index,B_In[component],label=f'{component}_{Model} RMS={RMS:.2f}',color='gray')
-    if Model_Ridge_On:
-        alpha = B_Model_Ridge['alpha'].iloc[0]
+    if Model_Regularized_SVD_On:
         RMS = calculate_rms_error(B_Model_Ridge[component].values, B_In_obs[component].values)
-        plt.plot(data.index, B_Model_Ridge[component], label=f'{component}_model_Ridge alpha = {alpha} RMS={RMS:.2f}', color='red')
+        plt.plot(data.index, B_Model_Ridge[component], label=f'{component}_model_Regularized_SVD RMS={RMS:.2f}', color='red')
     if Model_SVD_On:
         RMS = calculate_rms_error(B_Model_SVD[component].values, B_In_obs[component].values)
         plt.plot(data.index, B_Model_SVD[component], label=f'{component}_model_SVD RMS={RMS:.2f}',color='green')
@@ -120,10 +104,9 @@ def PLot_Bfield_Model(data,Nmax=10,path = 'Spherical_Harmonic_Model/',Model_Inte
     if Model_JRM_on:
         RMS = calculate_rms_error(B_In[component].values, B_In_obs[component].values)
         plt.plot(data.index, B_In[component], label=f'{component}_{Model} RMS={RMS:.2f}', color='gray')
-    if Model_Ridge_On:
-        alpha = B_Model_Ridge['alpha'].iloc[0]
+    if Model_Regularized_SVD_On:
         RMS = calculate_rms_error(B_Model_Ridge[component].values, B_In_obs[component].values)
-        plt.plot(data.index, B_Model_Ridge[component], label=f'{component}_model_Ridge alpha = {alpha} RMS={RMS:.2f}',
+        plt.plot(data.index, B_Model_Ridge[component], label=f'{component}_model_Regularized_SVD RMS={RMS:.2f}',
                  color='red')
     if Model_SVD_On:
         RMS = calculate_rms_error(B_Model_SVD[component].values, B_In_obs[component].values)
@@ -142,10 +125,9 @@ def PLot_Bfield_Model(data,Nmax=10,path = 'Spherical_Harmonic_Model/',Model_Inte
     if Model_JRM_on:
         RMS = calculate_rms_error(B_In[component].values, B_In_obs[component].values)
         plt.plot(data.index, B_In[component], label=f'{component}_{Model} RMS={RMS:.2f}', color='gray')
-    if Model_Ridge_On:
-        alpha = B_Model_Ridge['alpha'].iloc[0]
+    if Model_Regularized_SVD_On:
         RMS = calculate_rms_error(B_Model_Ridge[component].values, B_In_obs[component].values)
-        plt.plot(data.index, B_Model_Ridge[component], label=f'{component}_model_Ridge alpha = {alpha} RMS={RMS:.2f}',
+        plt.plot(data.index, B_Model_Ridge[component], label=f'{component}_model_Regularized_SVD RMS={RMS:.2f}',
                  color='red')
     if Model_SVD_On:
         RMS = calculate_rms_error(B_Model_SVD[component].values, B_In_obs[component].values)
@@ -164,10 +146,9 @@ def PLot_Bfield_Model(data,Nmax=10,path = 'Spherical_Harmonic_Model/',Model_Inte
     if Model_JRM_on:
         RMS = calculate_rms_error(B_In[component].values, B_In_obs[component].values)
         plt.plot(data.index, B_In[component], label=f'{component}_{Model} RMS={RMS:.2f}', color='gray')
-    if Model_Ridge_On:
-        alpha = B_Model_Ridge['alpha'].iloc[0]
+    if Model_Regularized_SVD_On:
         RMS = calculate_rms_error(B_Model_Ridge[component].values, B_In_obs[component].values)
-        plt.plot(data.index, B_Model_Ridge[component], label=f'{component}_model_Ridge alpha = {alpha} RMS={RMS:.2f}',
+        plt.plot(data.index, B_Model_Ridge[component], label=f'{component}_model_Regularized_SVD RMS={RMS:.2f}',
                  color='red')
     if Model_SVD_On:
         RMS = calculate_rms_error(B_Model_SVD[component].values, B_In_obs[component].values)
@@ -194,7 +175,7 @@ def PLot_Bfield_Model(data,Nmax=10,path = 'Spherical_Harmonic_Model/',Model_Inte
     print(f'Loop Ends Nmax = {Nmax}')
     print('-'*50)
 
-def Plot_RMS_Nmax(data,Nmax_list=[1],path = 'Spherical_Harmonic_Model/',Model_JRM_on = True,Model_SVD_On = True,Rc=1.0,Model_Internal='jrm33'):
+def Plot_RMS_Nmax(data,Nmax_list=[1],path = 'Spherical_Harmonic_Model/',Method='SVD',Model_JRM_on = True,Model_SVD_On = True,Rc=1.0,Model_Internal='jrm33',rc=1.0):
 
     Time_start = data.index.min()
     Time_end = data.index.max()
@@ -212,6 +193,7 @@ def Plot_RMS_Nmax(data,Nmax_list=[1],path = 'Spherical_Harmonic_Model/',Model_JR
         B_In_obs = Spherical_Harmonic_InversionModel_Functions.B_In_obs_Calculate(data, B_Ex)
 
         if Model_JRM_on:
+
             B_Model_JRM = Juno_Mag_MakeData_Function.MagneticField_Internal(data, model=Model_Internal, degree=Nmax)
             print(f'B Field by JRM Model Calculated, Nmax={Nmax}')
 
@@ -229,8 +211,11 @@ def Plot_RMS_Nmax(data,Nmax_list=[1],path = 'Spherical_Harmonic_Model/',Model_JR
             RMS_list_JRM.append(RMS_JRM_Temp)
 
         if Model_SVD_On:
+
+            data['r'] = data['r'] / rc
             B_Model_SVD = Spherical_Harmonic_InversionModel_Functions.calculate_Bfield(data, Nmax=Nmax, path=path,
-                                                                                       method='SVD', Rc=Rc)
+                                                                                       method=Method, Rc=Rc)
+            data['r'] = data['r'] * rc
             print(f'B Field by SVD Model Calculated, Nmax={Nmax}')
 
             RMS_SVD_Temp = []
@@ -299,17 +284,113 @@ def Plot_RMS_Nmax(data,Nmax_list=[1],path = 'Spherical_Harmonic_Model/',Model_JR
     plt.show()
     plt.close()
 
+def Plot_RMS_Lambda(data,Rc_Lambda_Dic={'1.0':[1.0]},Nmax=30,path = 'Spherical_Harmonic_Model/First50_Orbit_Model_Regularization_',Method='SVD',Model_JRM_on = True,Model_SVD_On = True,Model_Internal='jrm33'):
 
-data['r'] = data['r']/0.85
 
-Nmax_list = [1,10,20,30,40,50,60]
+    # Calculate the Internal Field
+    B_Ex = Juno_Mag_MakeData_Function.MagneticField_External(data)
+    B_In_obs = Spherical_Harmonic_InversionModel_Functions.B_In_obs_Calculate(data, B_Ex)
 
-# path = 'Spherical_Harmonic_Model/Ridged_Model'
-path = 'Spherical_Harmonic_Model/First50_Orbit_Model'
+    RMS_df = pd.DataFrame(columns=['Rc','Lambda','Br','Btheta','Bphi','Btotal'])
 
-# for Nmax in Nmax_list:
-#
-#     PLot_Bfield_Model(data, Nmax=Nmax, path=path,
-#                       Model_SVD_On=True, Model_LSTSQ_On=False, Model_Ridge_On=False,Rc=1)
+    B_Model_JRM = Juno_Mag_MakeData_Function.MagneticField_Internal(data, model=Model_Internal, degree=Nmax)
+    JRM_RMS = {'Br':calculate_rms_error(B_Model_JRM['Br'].values, B_In_obs['Br'].values),
+               'Btheta':calculate_rms_error(B_Model_JRM['Btheta'].values, B_In_obs['Btheta'].values),
+               'Bphi':calculate_rms_error(B_Model_JRM['Bphi'].values, B_In_obs['Bphi'].values),
+               'Btotal':calculate_rms_error(B_Model_JRM['Btotal'].values, B_In_obs['Btotal'].values)}
 
-Plot_RMS_Nmax(data,Nmax_list=Nmax_list,path=path)
+    for Rc in Rc_Lambda_Dic.keys():
+        for Lambda in Rc_Lambda_Dic[Rc]:
+
+            path_lambda = path+f'{Rc}_{Lambda:.2e}'
+            B_Model_SVD = Spherical_Harmonic_InversionModel_Functions.calculate_Bfield(data, Nmax=Nmax, path=path_lambda,method=Method)
+
+            new_row = {'Rc':Rc,
+                       'Lambda':Lambda,
+                       'Br':calculate_rms_error(B_Model_SVD['Br'].values, B_In_obs['Br'].values),
+                       'Btheta':calculate_rms_error(B_Model_SVD['Btheta'].values, B_In_obs['Btheta'].values),
+                       'Bphi':calculate_rms_error(B_Model_SVD['Bphi'].values, B_In_obs['Bphi'].values),
+                       'Btotal':calculate_rms_error(B_Model_SVD['Btotal'].values, B_In_obs['Btotal'].values)
+                       }
+            if RMS_df.empty:
+                RMS_df = pd.DataFrame([new_row])
+            else:
+                RMS_df = pd.concat([RMS_df,pd.DataFrame([new_row])],ignore_index=True)
+            print(f'Rc = {Rc}, Lambda = {Lambda}, Model RMS Calculated')
+
+    # Set the plotting style
+    sns.set(style='whitegrid')
+
+    # Create a figure with subplots
+    fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(15, 13), sharex=True)
+
+    # Titles for subplots
+    titles = ['Br', 'Btheta', 'Bphi', 'Btotal']
+
+    # Plot each component in a separate subplot
+    for i, title in enumerate(titles):
+        ax = axes[i // 2, i % 2]  # Determine the position of the subplot
+        sns.lineplot(data=RMS_df, x='Lambda', y=title, hue='Rc', ax=ax, marker='o')
+
+        ax.axhline(y=JRM_RMS[title], color='green', linestyle='--', linewidth=1.5)
+        # Add text annotation for the baseline
+        ax.text(RMS_df['Lambda'].max()*1e-2, JRM_RMS[title], f'JRM33: {JRM_RMS[title]:.2f}',
+                color='green')
+
+        ax.set_title(title+' RMS')
+        ax.set_xlabel(f'$\lambda$ (log)')
+        ax.set_ylabel('RMS value')
+        ax.set_xscale('log')
+        ax.set_ylim(50,300)
+
+    # Adjust layout
+    plt.tight_layout()
+    plt.savefig('Spherical_Harmonic_Model/Model_RMS.jpg',dpi=400)
+    plt.show()
+
+
+
+if __name__ == '__main__':
+    # year_doy_pj = {'2021': [[52, 32]]}
+    year_doy_pj = {'2017': [[33, 4]]}
+
+    # Model Compared to
+    Model = 'jrm33'
+
+    # read the data
+
+    data = read_data(year_doy_pj)
+    Time_start = data.index.min()
+    Time_end = Time_start + Juno_Mag_MakeData_Function.hour_1 * 24
+    # Time_start = data.index.min()+Juno_Mag_MakeData_Function.hour_1*4
+    # Time_end = Time_start+Juno_Mag_MakeData_Function.hour_1*3
+    # Time_end = Time_start+Juno_Mag_MakeData_Function.min_1*15
+
+    data = data.loc[Time_start:Time_end]
+
+    '''
+    Nmax_list = [1,10,20,30,40]
+    
+    
+    path = 'Spherical_Harmonic_Model/First50_Orbit_Model_RegularizationTest'
+    
+    for Nmax in Nmax_list:
+    
+        PLot_Bfield_Model(data, Nmax=Nmax, path=path,
+                          Model_SVD_On=False, Model_LSTSQ_On=False, Model_Regularized_SVD_On=True,Rc=1,rc=1)
+    
+    Plot_RMS_Nmax(data,Nmax_list=Nmax_list,path=path,rc=1,Method='Regularized_SVD')
+    '''
+    # Rc_List = [1.0, 0.9, 0.8, 0.7, 0.88, 0.85, 0.92]
+    # Lambda_List = [1.0, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7]
+    Rc_Lambda_Dic = {'1.0':[1.0, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7,1e-8,1e-9,1e-10,1e-11,1e-12,1e-13,1e-14,1e-15,1e-16,1e-17,1e-18,1e-19,1e-20],
+                     '0.9':[1.0, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7,1e-8,1e-9,1e-10,1e-11,1e-12,1e-13,1e-14,1e-15,1e-16,1e-17,1e-18,1e-19,1e-20],
+                     '0.88':[1.0, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7,1e-8,1e-9,1e-10,1e-11,1e-12,1e-13,1e-14,1e-15,1e-16,1e-17,1e-18,1e-19,1e-20],
+                     '0.85':[1.0, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7,1e-8,1e-9,1e-10,1e-11,1e-12,1e-13,1e-14,1e-15,1e-16,1e-17,1e-18,1e-19,1e-20],
+                     '0.92':[1.0, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7,1e-8,1e-9,1e-10,1e-11,1e-12,1e-13,1e-14,1e-15,1e-16,1e-17,1e-18,1e-19,1e-20],
+                     '0.8':[1.0, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7,1e-8,1e-9,1e-10,1e-11,1e-12,1e-13,1e-14,1e-15,1e-16,1e-17,1e-18,1e-19,1e-20],
+                     '0.7': [1.0, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8, 1e-9, 1e-10, 1e-11, 1e-12, 1e-13,
+                             1e-14, 1e-15, 1e-16, 1e-17, 1e-18, 1e-19, 1e-20],
+
+                     }
+    Plot_RMS_Lambda(data,Rc_Lambda_Dic,Method='Regularized_SVD')

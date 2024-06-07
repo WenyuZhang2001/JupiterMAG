@@ -48,7 +48,25 @@ from scipy.special import lpmn,factorial
 
 import Spherical_Harmonic_InversionModel_Functions
 
-gnm_hnm = Spherical_Harmonic_InversionModel_Functions.read_gnm_hnm_data(method='SVD', Nmax=1, path='Spherical_Harmonic_Model/First20_Orbit_Model')
+# gnm_hnm = Spherical_Harmonic_InversionModel_Functions.read_gnm_hnm_data(method='SVD', Nmax=1, path='Spherical_Harmonic_Model/First20_Orbit_Model')
+#
+# print(gnm_hnm)
 
-print(gnm_hnm)
+# A = np.array(range(20))
+#
+# print(A[2::2])
 
+# import spiceypy as spice
+#
+# spice.tkvrsn('TOOLKIT')
+# print(spice.tkvrsn('TOOLKIT'))
+
+print(np.linspace(0, 24, 25))
+print(np.arange(0, 24, 1))
+
+Rc_Lambda_Dic = {'0.88': [1.0, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7],
+                     '0.85': [1.0, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7]}
+
+  # Gets the first key
+num_values = len(Rc_Lambda_Dic[next(iter(Rc_Lambda_Dic))])
+print(num_values)

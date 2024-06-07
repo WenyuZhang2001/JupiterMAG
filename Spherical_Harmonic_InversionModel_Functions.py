@@ -20,8 +20,10 @@ def B_In_obs_Calculate(data,B_Ex):
     B_In_obs['Btotal'] = np.sqrt(B_In_obs['Br']**2 + B_In_obs['Btheta']**2 + B_In_obs['Bphi']**2)
     return B_In_obs
 
-def Model_Simulation(data, B_In_obs, NMAX=10, NMIN=1, SVD_On=True,LSTSQ_On = True, Ridge_On = True,
-                     SVD_rcond= 1e-15,Ridge_alpha=0.1, path='Spherical_Harmonic_Model'):
+def Model_Simulation(data, B_In_obs, NMAX=10, NMIN=1, SVD_On=True,LSTSQ_On = True, Regularization_On = True,
+                     SVD_rcond= 1e-15,Regularize_lambda=1,Regularize_rc=1,path='Spherical_Harmonic_Model'):
+
+    os.makedirs(path, exist_ok=True)
 
     data['theta'] = data['theta'] / 360 * 2 * np.pi
     data['phi'] = data['phi'] / 360 * 2 * np.pi
@@ -52,6 +54,7 @@ def Model_Simulation(data, B_In_obs, NMAX=10, NMIN=1, SVD_On=True,LSTSQ_On = Tru
             print(f'The LSTSQ number of the gnm & hnm is {num_coeffs}')
 
         if SVD_On:
+
             U, sigma, VT = np.linalg.svd(A, full_matrices=False)
             A_inv = np.linalg.pinv(A, rcond=SVD_rcond)
             gnm_hnm_SVD = np.dot(A_inv, B)
@@ -60,20 +63,39 @@ def Model_Simulation(data, B_In_obs, NMAX=10, NMIN=1, SVD_On=True,LSTSQ_On = Tru
             np.save(f'{path}/Inversion_SVD_coefficients_U_Nmax{Nmax}.npy', U)
             np.save(f'{path}/Inversion_SVD_coefficients_S_Nmax{Nmax}.npy', sigma)
             np.save(f'{path}/Inversion_SVD_coefficients_V_Nmax{Nmax}.npy', VT)
-            print(f'The SVD Shape of the gnm_hnm is {gnm_hnm_SVD.shape}')
-            print(f'The SVD Spahe of U is {U.shape}, S is {sigma.shape}, V is {VT.shape}')
 
-        if Ridge_On:
-            ridge_model = Ridge(alpha=Ridge_alpha)
-            ridge_model.fit(A, B)
-            joblib.dump(ridge_model, f'{path}/ridge_model_Nmax{Nmax}_Alpha{Ridge_alpha}.joblib')
-            print("Ridge Model Coefficients:", ridge_model.coef_.shape)
-            print(f'Ridged Alpha={Ridge_alpha}')
+            print(f'The SVD Shape of the gnm_hnm is {gnm_hnm_SVD.shape}')
+            print(f'The SVD Spape of U is {U.shape}, S is {sigma.shape}, V is {VT.shape}')
+            print(f'SVD Nmax={Nmax} finished')
+            print('-'*50)
+        if Regularization_On:
+
+            Regularized_A = Schmidt_Matrix_Regularization(A,Nmax=Nmax,rc=Regularize_rc,lambda_reg=Regularize_lambda)
+            U, sigma, VT = np.linalg.svd(Regularized_A, full_matrices=False)
+            A_inv = np.linalg.pinv(Regularized_A, rcond=SVD_rcond)
+            New_B = np.dot(A.T, B)
+            gnm_hnm_Regularized = np.dot(A_inv, New_B)
+
+
+            np.save(f'{path}/Inversion_Regularized_SVD_coefficients_gnm_hnm_Nmax{Nmax}.npy', gnm_hnm_Regularized)
+            np.save(f'{path}/Inversion_Regularized_SVD_coefficients_U_Nmax{Nmax}.npy', U)
+            np.save(f'{path}/Inversion_Regularized_SVD_coefficients_S_Nmax{Nmax}.npy', sigma)
+            np.save(f'{path}/Inversion_Regularized_SVD_coefficients_V_Nmax{Nmax}.npy', VT)
+            print(f'The Regularized SVD Shape of the gnm_hnm is {gnm_hnm_Regularized.shape}')
+            print(f'The Regularized SVD Spape of U is {U.shape}, S is {sigma.shape}, V is {VT.shape}')
+
+            print(f'Regularized SVD Nmax={Nmax} finished')
+            print('-' * 50)
+            # ridge_model = Ridge(alpha=Ridge_alpha)
+            # ridge_model.fit(A, B)
+            # joblib.dump(ridge_model, f'{path}/ridge_model_Nmax{Nmax}_Alpha{Ridge_alpha}.joblib')
+            # print("Ridge Model Coefficients:", ridge_model.coef_.shape)
+            # print(f'Ridged Alpha={Ridge_alpha}')
 
 
         print(f'Loop Nmax={Nmax} End')
 
-        if (SVD_On or Ridge_On or LSTSQ_On) == False:
+        if (SVD_On or Regularization_On or LSTSQ_On) == False:
             print('No Model Trained!')
         print('=' * 50)
 
@@ -90,7 +112,7 @@ def read_gnm_hnm_data(method='SVD', Nmax=13, path='Spherical_Harmonic_Model'):
 def Schmidt_Matrix(data,Nmax):
     # Initialize the design matrix A
     num_coeffs = int((Nmax + 2) * Nmax)
-    print(f'Schmidt Coefficient total numbers = {num_coeffs}\n gnm_num={(Nmax+3)*Nmax/2} hnm_num={(Nmax+3)*Nmax/2-Nmax}')
+    print(f'Schmidt Coefficient total numbers = {num_coeffs}\ngnm_num={(Nmax+3)*Nmax/2} hnm_num={(Nmax+3)*Nmax/2-Nmax}')
     A = np.zeros((len(data)*3, num_coeffs))
 
     # Function to calculate the Schmidt semi-normalization factor
@@ -126,17 +148,17 @@ def Schmidt_Matrix(data,Nmax):
                                                    dP[m, n] * N_lm
                 # Contribution to Bphi from hnm
                 A[3*i + 2, hnm_index] = m * (r_val**(-n - 2)) * (-np.cos(m * phi_val)) * P[m, n] * N_lm / np.sin(theta_val)
-    print(f'SchmidtMatrix calculate success. Shape = {A.shape}')
+    print(f'SchmidtMatrix calculate success. Shape = {A.shape}\n'+'+'*50)
 
     return A
 
-def calculate_Bfield(data,path='Spherical_Harmonic_Model',Nmax=10,method='SVD',Ridge_alpha=0.1,Rc=1.0):
+def calculate_Bfield(data,path='Spherical_Harmonic_Model',Nmax=10,method='SVD',Rc=1.0):
     '''
 
     :param data:  data [theta] and [phi] is in degree, this function will auto trans it to rad and trans back at the end
     :param path:
     :param Nmax:
-    :param method:
+    :param method: SVD,Regularized_SVD
     :param Ridge_alpha:
     :return:
     '''
@@ -144,21 +166,19 @@ def calculate_Bfield(data,path='Spherical_Harmonic_Model',Nmax=10,method='SVD',R
     data['phi'] = data['phi'] / 360 * 2 * np.pi
 
     SchmidtMatrix = Schmidt_Matrix(data,Nmax)
-    if method=='Ridge':
-        ridge_model = joblib.load(f'{path}/ridge_model_Nmax{Nmax}_Alpha{Ridge_alpha}.joblib')
-        B_Model = ridge_model.predict(SchmidtMatrix)
-    else:
-        gnm_hnm_coeffi = read_gnm_hnm_data(path=path,Nmax=Nmax,method=method)
-        ParameterScale(gnm_hnm_coeffi,Nmax=Nmax,Rc=Rc)
-        B_Model = np.dot(SchmidtMatrix,gnm_hnm_coeffi)
+    # ridge_model = joblib.load(f'{path}/ridge_model_Nmax{Nmax}_Alpha{Ridge_alpha}.joblib')
+    # B_Model = ridge_model.predict(SchmidtMatrix)
+    gnm_hnm_coeffi = read_gnm_hnm_data(path=path,Nmax=Nmax,method=method)
+    ParameterScale(gnm_hnm_coeffi,Nmax=Nmax,Rc=Rc)
+    B_Model = np.dot(SchmidtMatrix,gnm_hnm_coeffi)
 
     B_Model = B_Model.reshape((int(len(B_Model)/3),3))
     B_Model_df = pd.DataFrame(B_Model,columns=['Br','Btheta','Bphi'],index=data['X'].index)
 
 
     B_Model_df['Btotal'] = np.sqrt(B_Model_df['Br']**2 + B_Model_df['Btheta']**2 + B_Model_df['Bphi']**2)
-    if method == 'Ridge':
-        B_Model_df['alpha'] = ridge_model.alpha * np.ones(len(B_Model_df))
+    # if method == 'Ridge':
+    #     B_Model_df['alpha'] = ridge_model.alpha * np.ones(len(B_Model_df))
 
     print(f'B Field of Model Calculated \n Nmax={Nmax}')
 
@@ -195,4 +215,29 @@ def ParameterScale(gnm_hnm_coeffi,Nmax,Rc = 1.0):
             gnm_hnm_coeffi[hnm_index] = gnm_hnm_coeffi[hnm_index] * Scale
 
     return
+
+def Schmidt_Matrix_Regularization(A,Nmax,rc,lambda_reg=1):
+
+    num_coeffs = int((Nmax + 2) * Nmax)
+    diagonal_elements = np.zeros(num_coeffs)
+
+    # Calculate the diagonal elements of the regularization matrix Gamma
+    for n in range(1,Nmax+1):
+        for m in range(n+1):
+            gnm_index = int((n + 2) * (n - 1) / 2 + m)
+            hnm_index = int((n + 2) * (n - 1) / 2 - (n - 1) + m - 1 + (Nmax + 3) * Nmax / 2)
+
+            diagonal_elements[gnm_index] = (n + 1) * (1 / rc) ** (2 * n + 4)
+            diagonal_elements[hnm_index] = (n + 1) * (1 / rc) ** (2 * n + 4)
+
+    # Construct the regularization matrix Gamma
+    Gamma = np.diag(diagonal_elements)
+
+    ATA = np.dot(A.T,A)
+    lambdaGammaTGamma = lambda_reg * np.dot(Gamma.T, Gamma)
+
+    # Compute the new matrix to decompose
+    modified_matrix = ATA + lambdaGammaTGamma
+
+    return modified_matrix
 

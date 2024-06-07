@@ -17,12 +17,15 @@ def main():
     # import date
     # year_doy_pj = Juno_Mag_MakeData_Function.year_doy_pj
     # For test
-    year_doy_pj = {'2017':[[139,6]]}
+    # year_doy_pj = {'2017':[[139,6]]}
+    year_doy_pj = {'2020':[[48,25]]}
     # data
     # read 1 s data
     data = Juno_Mag_MakeData_Function.read_24hData(year_doy_pj,freq=1)
+
     # doing resmapling, 1s => 60s
-    # data = data.iloc[::60]
+    data = data.iloc[::10]
+
     # Calculate the B field Internal and External
     # Internal Use my Spherical Harmonic Model
 
